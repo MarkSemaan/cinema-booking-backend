@@ -6,7 +6,7 @@ class DBConnection
     private $db_name = 'cinema_booking_db';
     private $username = 'root';
     private $password = '';
-    public $mysqli;
+    private $mysqli;
 
     // Get the database connection
     public function __construct()
@@ -18,20 +18,23 @@ class DBConnection
             die("Connection failed: " . $this->mysqli->connect_error);
         }
     }
+
     private function __clone()
     {
         // Prevent cloning of the instance
     }
+
     private function __wakeup()
     {
         // Prevent unserializing of the instance
     }
+
     public static function getInstance()
     {
         static $instance = null;
         if ($instance === null) {
             $instance = new DBConnection();
         }
-        return $instance;
+        return $instance->mysqli;
     }
 }
