@@ -2,9 +2,9 @@
 
 require_once 'model.php';
 
-class Booking extends Model
+class BookedSeat extends Model
 {
-    protected $table = 'bookedseats';
+    protected $table = 'booked_seats';
     protected $fillable = [
         'booking_id',
         'seat_row',

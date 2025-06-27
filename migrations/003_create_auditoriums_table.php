@@ -5,7 +5,7 @@ function createAuditoriumsTable($mysqli)
     $sql = "CREATE TABLE IF NOT EXISTS auditoriums (
         id INT(11) AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
-        seats_rows INT(11) NOT NULL,
+        seats_rows INT(11) NOT NULL DEFAULT 0,
         seats_per_row INT(11) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )";

@@ -8,6 +8,6 @@ class Showtime extends Model
     protected $fillable = [
         'movie_id',
         'auditorium_id',
-        'start_time',
+        'showtime',
     ];
 }

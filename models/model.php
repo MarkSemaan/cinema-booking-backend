@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../connections/db_connection.php';
+require_once __DIR__ . '/../connection/db_connection.php';
 
 abstract class Model
 {
@@ -10,7 +10,7 @@ abstract class Model
 
     public function __construct()
     {
-        $this->mysqli = DBConnection::getInstance();
+        $this->mysqli = DBConnection::getInstance()->getConnection();
     }
 
     public function findAll()
