@@ -1,5 +1,5 @@
 <?php
-require_once '../connection/db_connection.php';
+require_once __DIR__ . '/../connection/db_connection.php';
 function createAuditoriumsTable($mysqli)
 {
     $sql = "CREATE TABLE IF NOT EXISTS auditoriums (

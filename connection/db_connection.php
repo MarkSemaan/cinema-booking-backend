@@ -1,15 +1,16 @@
 <?php
-
 class DBConnection
 {
     private $host = 'localhost';
     private $db_name = 'cinema_booking_db';
     private $username = 'root';
-    private $password = '';
+    private $password = 'root';
     private $mysqli;
 
-    // Get the database connection
-    public function __construct()
+    private static $instance = null;
+
+    // Private constructor to prevent direct instantiation
+    private function __construct()
     {
         $this->mysqli = new mysqli($this->host, $this->username, $this->password, $this->db_name);
 
@@ -19,22 +20,16 @@ class DBConnection
         }
     }
 
-    private function __clone()
-    {
-        // Prevent cloning of the instance
-    }
-
-    private function __wakeup()
-    {
-        // Prevent unserializing of the instance
-    }
-
     public static function getInstance()
     {
-        static $instance = null;
-        if ($instance === null) {
-            $instance = new DBConnection();
+        if (self::$instance === null) {
+            self::$instance = new DBConnection();
         }
-        return $instance->mysqli;
+        return self::$instance;
+    }
+
+    public function getConnection()
+    {
+        return $this->mysqli;
     }
 }
