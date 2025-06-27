@@ -1,0 +1,12 @@
+<?php
+require_once '../connection/db_connection.php';
+
+function createDB($mysqli)
+{
+    $sql = "CREATE DATABASE IF NOT EXISTS cinema_booking_db";
+    if ($mysqli->query($sql) === TRUE) {
+        echo "Database created successfully\n";
+    } else {
+        echo "Error creating database: " . $mysqli->error . "\n";
+    }
+}
