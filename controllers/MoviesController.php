@@ -4,6 +4,30 @@ require_once __DIR__ . '/../models/Movie.php';
 
 class MoviesController
 {
+    private function isAdmin($userId)
+    {
+        if (!$userId) return false;
+
+        try {
+            require_once __DIR__ . '/../models/User.php';
+            $user = new User();
+            $userData = $user->find((int)$userId);
+            return $userData && (bool)$userData['is_admin'];
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    private function requireAdmin()
+    {
+        $userId = $_GET['user_id'] ?? $_POST['user_id'] ?? null;
+        if (!$this->isAdmin($userId)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Admin access required']);
+            return false;
+        }
+        return true;
+    }
     public function list()
     {
         try {
@@ -47,6 +71,8 @@ class MoviesController
 
     public function create()
     {
+        if (!$this->requireAdmin()) return;
+
         $data = json_decode(file_get_contents('php://input'), true);
 
         if (empty($data['title']) || empty($data['director']) || empty($data['release_year'])) {
@@ -81,6 +107,8 @@ class MoviesController
 
     public function update()
     {
+        if (!$this->requireAdmin()) return;
+
         $id = $_GET['id'] ?? null;
 
         if (!$id || !is_numeric($id)) {
@@ -139,6 +167,8 @@ class MoviesController
 
     public function delete()
     {
+        if (!$this->requireAdmin()) return;
+
         $id = $_GET['id'] ?? null;
 
         if (!$id || !is_numeric($id)) {

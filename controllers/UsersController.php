@@ -42,7 +42,12 @@ class UsersController
         $user = $userModel->findBy('email', $data['email']);
 
         if ($user && password_verify($data['password'], $user['password'])) {
-            echo json_encode(['message' => 'Login successful', 'user_id' => $user['id']]);
+            echo json_encode([
+                'message' => 'Login successful',
+                'user_id' => $user['id'],
+                'username' => $user['username'],
+                'is_admin' => (bool)$user['is_admin']
+            ]);
         } else {
             http_response_code(401);
             echo json_encode(['error' => 'Invalid credentials']);

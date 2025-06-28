@@ -4,6 +4,30 @@ require_once __DIR__ . '/../models/Showtime.php';
 
 class ShowtimesController
 {
+    private function isAdmin($userId)
+    {
+        if (!$userId) return false;
+
+        try {
+            require_once __DIR__ . '/../models/User.php';
+            $user = new User();
+            $userData = $user->find((int)$userId);
+            return $userData && (bool)$userData['is_admin'];
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    private function requireAdmin()
+    {
+        $userId = $_GET['user_id'] ?? $_POST['user_id'] ?? null;
+        if (!$this->isAdmin($userId)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Admin access required']);
+            return false;
+        }
+        return true;
+    }
     public function list()
     {
         try {
@@ -75,6 +99,8 @@ class ShowtimesController
 
     public function create()
     {
+        if (!$this->requireAdmin()) return;
+
         $data = json_decode(file_get_contents('php://input'), true);
 
         if (empty($data['movie_id']) || empty($data['auditorium_id']) || empty($data['showtime'])) {
@@ -106,6 +132,8 @@ class ShowtimesController
 
     public function update()
     {
+        if (!$this->requireAdmin()) return;
+
         $id = $_GET['id'] ?? null;
 
         if (!$id || !is_numeric($id)) {
@@ -161,6 +189,8 @@ class ShowtimesController
 
     public function delete()
     {
+        if (!$this->requireAdmin()) return;
+
         $id = $_GET['id'] ?? null;
 
         if (!$id || !is_numeric($id)) {
