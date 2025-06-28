@@ -1,0 +1,180 @@
+<?php
+
+require_once __DIR__ . '/../models/Movie.php';
+
+class MoviesController
+{
+    public function list()
+    {
+        try {
+            $movie = new Movie();
+            $movies = $movie->findAll();
+
+            http_response_code(200);
+            echo json_encode(['movies' => $movies]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to retrieve movies']);
+        }
+    }
+
+    public function get()
+    {
+        $id = $_GET['id'] ?? null;
+
+        if (!$id || !is_numeric($id)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Valid movie ID is required']);
+            return;
+        }
+
+        try {
+            $movie = new Movie();
+            $movieData = $movie->find((int)$id);
+
+            if ($movieData) {
+                http_response_code(200);
+                echo json_encode(['movie' => $movieData]);
+            } else {
+                http_response_code(404);
+                echo json_encode(['error' => 'Movie not found']);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to retrieve movie']);
+        }
+    }
+
+    public function create()
+    {
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        if (empty($data['title']) || empty($data['director']) || empty($data['release_year'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Title, director, and release year are required']);
+            return;
+        }
+
+        try {
+            $movie = new Movie();
+            $movieId = $movie->create([
+                'title' => $data['title'],
+                'director' => $data['director'],
+                'release_year' => (int)$data['release_year'],
+                'genre' => $data['genre'] ?? null,
+                'synopsis' => $data['synopsis'] ?? null,
+                'poster_url' => $data['poster_url'] ?? null
+            ]);
+
+            if ($movieId) {
+                http_response_code(201);
+                echo json_encode(['message' => 'Movie created successfully', 'movie_id' => $movieId]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'Failed to create movie']);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to create movie']);
+        }
+    }
+
+    public function update()
+    {
+        $id = $_GET['id'] ?? null;
+
+        if (!$id || !is_numeric($id)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Valid movie ID is required']);
+            return;
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        if (empty($data)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'No data provided for update']);
+            return;
+        }
+
+        try {
+            $movie = new Movie();
+
+            // Check if movie exists
+            if (!$movie->find((int)$id)) {
+                http_response_code(404);
+                echo json_encode(['error' => 'Movie not found']);
+                return;
+            }
+
+            $updateData = [];
+            if (isset($data['title'])) $updateData['title'] = $data['title'];
+            if (isset($data['director'])) $updateData['director'] = $data['director'];
+            if (isset($data['release_year'])) $updateData['release_year'] = (int)$data['release_year'];
+            if (isset($data['genre'])) $updateData['genre'] = $data['genre'];
+            if (isset($data['synopsis'])) $updateData['synopsis'] = $data['synopsis'];
+            if (isset($data['poster_url'])) $updateData['poster_url'] = $data['poster_url'];
+
+            if ($movie->update((int)$id, $updateData)) {
+                http_response_code(200);
+                echo json_encode(['message' => 'Movie updated successfully']);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'Failed to update movie']);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to update movie']);
+        }
+    }
+
+    public function delete()
+    {
+        $id = $_GET['id'] ?? null;
+
+        if (!$id || !is_numeric($id)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Valid movie ID is required']);
+            return;
+        }
+
+        try {
+            $movie = new Movie();
+
+            // Check if movie exists
+            if (!$movie->find((int)$id)) {
+                http_response_code(404);
+                echo json_encode(['error' => 'Movie not found']);
+                return;
+            }
+
+            // Check for related showtimes  
+            require_once __DIR__ . '/../connection/db_connection.php';
+            $mysqli = DBConnection::getInstance()->getConnection();
+            $stmt = $mysqli->prepare("SELECT COUNT(*) as count FROM showtimes WHERE movie_id = ?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $result = $stmt->get_result()->fetch_assoc();
+
+            if ($result['count'] > 0) {
+                http_response_code(409);
+                echo json_encode([
+                    'error' => 'Cannot delete movie with existing showtimes',
+                    'message' => 'This movie has ' . $result['count'] . ' scheduled showtime(s). Please delete the showtimes first.'
+                ]);
+                return;
+            }
+
+            if ($movie->delete((int)$id)) {
+                http_response_code(200);
+                echo json_encode(['message' => 'Movie deleted successfully']);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'Failed to delete movie']);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
+        }
+    }
+}
