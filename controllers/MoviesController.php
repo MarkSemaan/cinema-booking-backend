@@ -115,16 +115,25 @@ class MoviesController
             if (isset($data['synopsis'])) $updateData['synopsis'] = $data['synopsis'];
             if (isset($data['poster_url'])) $updateData['poster_url'] = $data['poster_url'];
 
-            if ($movie->update((int)$id, $updateData)) {
-                http_response_code(200);
-                echo json_encode(['message' => 'Movie updated successfully']);
+            if (empty($updateData)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'No valid fields provided for update']);
+                return;
+            }
+
+            // The update method returns false if no rows were affected, but query might still be successful
+            $updateResult = $movie->update((int)$id, $updateData);
+
+            // Always return success if no exception was thrown
+            http_response_code(200);
+            if ($updateResult === false) {
+                echo json_encode(['message' => 'Movie updated successfully (no changes made)']);
             } else {
-                http_response_code(500);
-                echo json_encode(['error' => 'Failed to update movie']);
+                echo json_encode(['message' => 'Movie updated successfully']);
             }
         } catch (Exception $e) {
             http_response_code(500);
-            echo json_encode(['error' => 'Failed to update movie']);
+            echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
         }
     }
 
@@ -148,26 +157,20 @@ class MoviesController
                 return;
             }
 
-            // Check for related showtimes  
-            require_once __DIR__ . '/../connection/db_connection.php';
-            $mysqli = DBConnection::getInstance()->getConnection();
-            $stmt = $mysqli->prepare("SELECT COUNT(*) as count FROM showtimes WHERE movie_id = ?");
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-            $result = $stmt->get_result()->fetch_assoc();
+            // Delete related showtimes first using ShowtimesController
+            require_once __DIR__ . '/ShowtimesController.php';
+            $showtimesController = new ShowtimesController();
+            $deletedShowtimes = $showtimesController->deleteByMovieId((int)$id);
 
-            if ($result['count'] > 0) {
-                http_response_code(409);
-                echo json_encode([
-                    'error' => 'Cannot delete movie with existing showtimes',
-                    'message' => 'This movie has ' . $result['count'] . ' scheduled showtime(s). Please delete the showtimes first.'
-                ]);
-                return;
-            }
-
+            // Now delete the movie
             if ($movie->delete((int)$id)) {
+                $message = 'Movie deleted successfully';
+                if ($deletedShowtimes > 0) {
+                    $message .= " (also deleted {$deletedShowtimes} related showtime(s))";
+                }
+
                 http_response_code(200);
-                echo json_encode(['message' => 'Movie deleted successfully']);
+                echo json_encode(['message' => $message]);
             } else {
                 http_response_code(500);
                 echo json_encode(['error' => 'Failed to delete movie']);
