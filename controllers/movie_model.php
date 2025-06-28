@@ -1,7 +1,7 @@
 <?php
 
-require_once __DIR__ . '../models/movie.php';
-require_once __DIR__ . '../controllers/base_controller.php';
+require_once __DIR__ . '/../models/movie.php';
+require_once __DIR__ . '/../controllers/base_controller.php';
 
 class MovieController extends BaseController
 {
