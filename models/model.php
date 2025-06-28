@@ -95,7 +95,7 @@ abstract class Model
         $stmt->bind_param($types, $value);
         $stmt->execute();
         $result = $stmt->get_result();
-        return $result->fetch_all(MYSQLI_ASSOC);
+        return $result->fetch_assoc(); // Return single record, not array of records
     }
 
     protected function get_param_types(array $values): string
