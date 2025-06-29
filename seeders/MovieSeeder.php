@@ -10,25 +10,25 @@ class MovieSeeder extends Seeder
         echo "Seeding Movies...\n";
         $movieModel = new Movie();
         $movie1_id = $movieModel->create([
-            'title' => 'The Rise of the Code Bot',
-            'director' => 'Ava Script',
-            'release_year' => 2023,
+            'title' => 'Top Gun: Maverick',
+            'director' => 'Joseph Kosinski',
+            'release_year' => 2022,
             'poster_url' => '/assets/movie_poster_1.jpg',
-            'synopsis' => 'In a world powered by AI, one developer bot achieves sentience and must navigate the complexities of its own code.'
+            'synopsis' => 'After thirty years, Maverick is still pushing the envelope as a top naval aviator, but must confront ghosts of his past when he leads TOP GUN\'s elite graduates on a mission that demands the ultimate sacrifice from those chosen to fly it.'
         ]);
         $movie2_id = $movieModel->create([
-            'title' => 'Database Down',
-            'director' => 'Sal Query',
+            'title' => 'Avatar: The Way of Water',
+            'director' => 'James Cameron',
             'release_year' => 2022,
             'poster_url' => '/assets/movie_poster_2.jpg',
-            'synopsis' => 'A thrilling disaster movie where a team of elite DBAs must race against time to restore a corrupted database before society collapses.'
+            'synopsis' => 'Jake Sully lives with his newfound family formed on the extrasolar moon Pandora. Once a familiar threat returns to finish what was previously started, Jake must work with Neytiri and the army of the Na\'vi race to protect their home.'
         ]);
         $movie3_id = $movieModel->create([
-            'title' => 'Frontend Funnies',
-            'director' => 'Mark Up',
-            'release_year' => 2024,
+            'title' => 'Spider-Man: No Way Home',
+            'director' => 'Jon Watts',
+            'release_year' => 2021,
             'poster_url' => '/assets/movie_poster_3.jpg',
-            'synopsis' => 'An animated adventure about a CSS Flexbox character trying to find its place in a world of Grids.'
+            'synopsis' => 'With Spider-Man\'s identity now revealed, Peter asks Doctor Strange for help. When a spell goes wrong, dangerous foes from other worlds start to appear, forcing Peter to discover what it truly means to be Spider-Man.'
         ]);
         echo "Created Movies with IDs: $movie1_id, $movie2_id, $movie3_id\n\n";
     }
