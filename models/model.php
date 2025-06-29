@@ -30,18 +30,19 @@ abstract class Model
     }
     public function create(array $data)
     {
+        //Only allow fillable columns
         $filteredData = array_filter(
             $data,
             fn($key) => in_array($key, $this->fillable),
             ARRAY_FILTER_USE_KEY
         );
+        //Create the columns and placeholders
         $columns = implode(", ", array_keys($filteredData));
         $placeholders = implode(", ", array_fill(0, count($filteredData), '?'));
 
         $stmt = $this->mysqli->prepare("INSERT INTO {$this->table} ({$columns}) VALUES ({$placeholders})");
 
         $values = array_values($filteredData);
-        $types = str_repeat('s', count($values));
 
         $types = $this->get_param_types($values);
         $stmt->bind_param($types, ...$values);
