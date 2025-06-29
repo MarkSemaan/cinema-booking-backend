@@ -39,14 +39,14 @@ abstract class Model
         //Create the columns and placeholders
         $columns = implode(", ", array_keys($filteredData));
         $placeholders = implode(", ", array_fill(0, count($filteredData), '?'));
-
+        //Prepare the statement and place the placeholders into the query
         $stmt = $this->mysqli->prepare("INSERT INTO {$this->table} ({$columns}) VALUES ({$placeholders})");
-
+        //Get the values from the filtered data
         $values = array_values($filteredData);
-
+        //Get the types of the values then bind them
         $types = $this->get_param_types($values);
         $stmt->bind_param($types, ...$values);
-
+        //If the statement is executed successfully, return the id of the inserted row
         if ($stmt->execute()) {
             return $this->mysqli->insert_id;
         } else {
@@ -56,30 +56,32 @@ abstract class Model
 
     public function update(int $id, array $data)
     {
+        //Only allow fillable columns
         $filteredData = array_filter(
             $data,
             fn($key) => in_array($key, $this->fillable),
             ARRAY_FILTER_USE_KEY
         );
-
+        //Prepare the arrays for updating the data
         $setClauses = [];
         $values = [];
         foreach ($filteredData as $column => $value) {
             $setClauses[] = "{$column} = ?";
             $values[] = $value;
         }
-
+        //Check if there is data to update
         if (empty($setClauses)) {
             return false; // No data to update
         }
-
+        //Prepare the statement,SET column $setClause and update the values
         $setClause = implode(", ", $setClauses);
         $sql = "UPDATE {$this->table} SET {$setClause} WHERE id = ?";
         $stmt = $this->mysqli->prepare($sql);
-
-        $values[] = $id; // Add ID to the end for binding
+        //Add the id to the end for binding
+        $values[] = $id;
+        //Get the types of the values
         $types = $this->get_param_types($values);
-
+        //Bind the values to the statement
         $stmt->bind_param($types, ...$values);
 
         if ($stmt->execute()) {
@@ -106,11 +108,12 @@ abstract class Model
         $stmt->bind_param($types, $value);
         $stmt->execute();
         $result = $stmt->get_result();
-        return $result->fetch_all(MYSQLI_ASSOC);
+        return $result->fetch_all(MYSQLI_ASSOC); // Return all records as an associative array
     }
 
     protected function get_param_types(array $values): string
     {
+        //Get the types of the values for dynamic binding
         $types = '';
         foreach ($values as $value) {
             if (is_int($value)) {
