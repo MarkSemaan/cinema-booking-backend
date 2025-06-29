@@ -5,8 +5,9 @@ require_once __DIR__ . '/../controllers/BookingsController.php';
 header('Content-Type: application/json');
 
 $controller = new BookingsController();
-$action = $_GET['action'] ?? null;
+$action = $_GET['action'] ?? null; //Get the action from the request
 
+// Sort of a mini router, based on the action, call the corresponding method
 switch ($action) {
     case 'create':
         $controller->create();

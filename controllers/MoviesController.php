@@ -4,6 +4,7 @@ require_once __DIR__ . '/../models/Movie.php';
 
 class MoviesController
 {
+    //Check if user is admin
     private function isAdmin($userId)
     {
         if (!$userId) return false;
@@ -17,7 +18,7 @@ class MoviesController
             return false;
         }
     }
-
+    //Require admin access for create, update and delete methods
     private function requireAdmin()
     {
         $userId = $_GET['user_id'] ?? $_POST['user_id'] ?? null;
@@ -149,10 +150,10 @@ class MoviesController
                 return;
             }
 
-            // The update method returns false if no rows were affected, but query might still be successful
+
             $updateResult = $movie->update((int)$id, $updateData);
 
-            // Always return success if no exception was thrown
+
             http_response_code(200);
             if ($updateResult === false) {
                 echo json_encode(['message' => 'Movie updated successfully (no changes made)']);

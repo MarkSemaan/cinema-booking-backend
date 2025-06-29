@@ -4,30 +4,32 @@ require_once __DIR__ . '/../models/Booking.php';
 
 class BookingsController
 {
+    //Method to create a new booking
     public function create()
     {
+        //Get the data from the request
         $data = json_decode(file_get_contents('php://input'), true);
-
+        //Check if the user id, showtime id, and seats are set
         if (empty($data['user_id']) || empty($data['showtime_id']) || empty($data['seats'])) {
             http_response_code(400);
             echo json_encode(['error' => 'User ID, showtime ID, and seats are required']);
             return;
         }
-
+        //Check if the seats are an array and not empty
         if (!is_array($data['seats']) || empty($data['seats'])) {
             http_response_code(400);
             echo json_encode(['error' => 'Seats must be a non-empty array']);
             return;
         }
-
+        //Create the booking model and create the booking
         try {
             require_once __DIR__ . '/../connection/db_connection.php';
             $mysqli = DBConnection::getInstance()->getConnection();
 
-            // Start transaction
+            // Don't save anything yet, if something goes wrong, rollback the transaction
             $mysqli->begin_transaction();
 
-            // Validate user exists
+            // Check if the user exists
             $stmt = $mysqli->prepare("SELECT id FROM users WHERE id = ?");
             $stmt->bind_param("i", $data['user_id']);
             $stmt->execute();
@@ -38,7 +40,7 @@ class BookingsController
                 return;
             }
 
-            // Validate showtime exists
+            // Check if the showtime exists
             $stmt = $mysqli->prepare("SELECT id FROM showtimes WHERE id = ?");
             $stmt->bind_param("i", $data['showtime_id']);
             $stmt->execute();
@@ -49,7 +51,7 @@ class BookingsController
                 return;
             }
 
-            // Check if seats are already booked
+            // Check if the seats are already booked
             foreach ($data['seats'] as $seat) {
                 if (!isset($seat['row']) || !isset($seat['number'])) {
                     $mysqli->rollback();
@@ -76,7 +78,7 @@ class BookingsController
                 }
             }
 
-            // Create booking
+            // Create the booking
             $booking = new Booking();
             $bookingId = $booking->create([
                 'user_id' => (int)$data['user_id'],
@@ -90,7 +92,7 @@ class BookingsController
                 return;
             }
 
-            // Create booked seats
+            // Create the booked seats
             $stmt = $mysqli->prepare("INSERT INTO booked_seats (booking_id, seat_row, seat_number) VALUES (?, ?, ?)");
             foreach ($data['seats'] as $seat) {
                 $stmt->bind_param("iis", $bookingId, $seat['row'], $seat['number']);
@@ -101,7 +103,7 @@ class BookingsController
                     return;
                 }
             }
-
+            //If everything checks out, commit the transaction
             $mysqli->commit();
             http_response_code(201);
             echo json_encode([
@@ -110,6 +112,7 @@ class BookingsController
                 'seats_booked' => count($data['seats'])
             ]);
         } catch (Exception $e) {
+            //If there is an error, rollback the transaction
             if (isset($mysqli)) {
                 $mysqli->rollback();
             }
@@ -117,7 +120,7 @@ class BookingsController
             echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
         }
     }
-
+    //Method to get all bookings for a specific user
     public function userBookings()
     {
         $userId = $_GET['user_id'] ?? null;
@@ -221,7 +224,7 @@ class BookingsController
             echo json_encode(['error' => 'Failed to retrieve booking']);
         }
     }
-
+    //Method to delete a booking
     public function cancel()
     {
         $id = $_GET['id'] ?? null;
@@ -255,7 +258,7 @@ class BookingsController
             echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
         }
     }
-
+    //Method to check for available seats
     public function availableSeats()
     {
         $showtimeId = $_GET['showtime_id'] ?? null;

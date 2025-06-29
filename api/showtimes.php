@@ -5,8 +5,9 @@ require_once __DIR__ . '/../controllers/ShowtimesController.php';
 header('Content-Type: application/json');
 
 $controller = new ShowtimesController();
-$action = $_GET['action'] ?? null;
+$action = $_GET['action'] ?? null; //Get the action from the request
 
+// Sort of a mini router, based on the action, call the corresponding method
 switch ($action) {
     case 'list':
         $controller->list();
