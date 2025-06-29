@@ -99,6 +99,16 @@ abstract class Model
         return $result->fetch_assoc(); // Return single record, not array of records
     }
 
+    public function findAllBy(string $column, $value)
+    {
+        $stmt = $this->mysqli->prepare("SELECT * FROM {$this->table} WHERE {$column} = ?");
+        $types = $this->get_param_types([$value]);
+        $stmt->bind_param($types, $value);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
     protected function get_param_types(array $values): string
     {
         $types = '';
