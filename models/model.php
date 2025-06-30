@@ -115,16 +115,23 @@ abstract class Model
     {
         //Get the types of the values for dynamic binding
         $types = '';
-        foreach ($values as $value) {
-            if (is_int($value)) {
-                $types .= 'i';
-            } elseif (is_float($value)) {
-                $types .= 'd';
-            } elseif (is_string($value)) {
-                $types .= 's';
-            } else {
-                $types .= 'b'; // Blob for other types
-            }
+        switch (true) {
+            case empty($values):
+                return 's'; // Default to string if no values
+            case is_int($values[0]):
+                $types = 'i'; // Integer
+                break;
+            case is_float($values[0]):
+                $types = 'd'; // Double
+                break;
+            case is_string($values[0]):
+                $types = 's'; // String
+                break;
+            case is_bool($values[0]):
+                $types = 'b'; // Boolean
+                break;
+            default:
+                $types = 's'; // Default to string for any other type
         }
         return $types;
     }
