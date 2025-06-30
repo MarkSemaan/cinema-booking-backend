@@ -58,6 +58,9 @@ class UsersController
                 'username' => $user['username'],
                 'is_admin' => (bool)$user['is_admin']
             ]);
+            http_response_code(200);
+            echo json_encode(['message' => 'Login successful']);
+            return;
         } else {
             //If the user does not exist or the password is incorrect, return an error message
             http_response_code(401);
