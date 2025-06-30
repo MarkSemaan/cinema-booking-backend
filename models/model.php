@@ -117,16 +117,16 @@ abstract class Model
         $types = '';
         foreach ($values as $value) {
             switch (true) {
-                case is_int($values):
+                case is_int($value):
                     $types .= 'i'; // Integer
                     break;
-                case is_float($values):
+                case is_float($value):
                     $types .= 'd'; // Float
                     break;
-                case is_string($values):
+                case is_string($value):
                     $types .= 's'; // String
                     break;
-                case is_bool($values):
+                case is_bool($value):
                     $types .= 'b'; // Boolean
                     break;
                 default:
