@@ -122,7 +122,7 @@ abstract class Model
                 $types = 'i'; // Integer
                 break;
             case is_float($values[0]):
-                $types = 'd'; // Double
+                $types = 'f'; // Float
                 break;
             case is_string($values[0]):
                 $types = 's'; // String
