@@ -21,7 +21,15 @@ class MoviesController
     //Require admin access for create, update and delete methods
     private function requireAdmin()
     {
+        // Check for user_id in GET, POST, or JSON body
         $userId = $_GET['user_id'] ?? $_POST['user_id'] ?? null;
+
+        // If not found in GET/POST, try to get from JSON body
+        if (!$userId) {
+            $jsonData = json_decode(file_get_contents('php://input'), true);
+            $userId = $jsonData['user_id'] ?? null;
+        }
+
         if (!$this->isAdmin($userId)) {
             http_response_code(403);
             echo json_encode(['error' => 'Admin access required']);

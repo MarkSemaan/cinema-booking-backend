@@ -4,6 +4,41 @@ require_once __DIR__ . '/../models/Auditorium.php';
 
 class AuditoriumsController
 {
+    //Check if user is admin
+    private function isAdmin($userId)
+    {
+        if (!$userId) return false;
+
+        try {
+            require_once __DIR__ . '/../models/User.php';
+            $user = new User();
+            $userData = $user->find((int)$userId);
+            return $userData && (bool)$userData['is_admin'];
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    //Require admin access for create, update and delete methods
+    private function requireAdmin()
+    {
+        // Check for user_id in GET, POST, or JSON body
+        $userId = $_GET['user_id'] ?? $_POST['user_id'] ?? null;
+
+        // If not found in GET/POST, try to get from JSON body
+        if (!$userId) {
+            $jsonData = json_decode(file_get_contents('php://input'), true);
+            $userId = $jsonData['user_id'] ?? null;
+        }
+
+        if (!$this->isAdmin($userId)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Admin access required']);
+            return false;
+        }
+        return true;
+    }
+
     public function list()
     {
         try {
@@ -19,6 +54,8 @@ class AuditoriumsController
     }
     public function create()
     {
+        if (!$this->requireAdmin()) return;
+
         $data = json_decode(file_get_contents('php://input'), true);
 
         if (empty($data['name']) || empty($data['seats_rows']) || empty($data['seats_per_row'])) {
