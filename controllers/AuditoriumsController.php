@@ -22,10 +22,10 @@ class AuditoriumsController
     //Require admin access for create, update and delete methods
     private function requireAdmin()
     {
-        // Check for user_id in GET, POST, or JSON body
+        // Check for user_id in multiple sources
         $userId = $_GET['user_id'] ?? $_POST['user_id'] ?? null;
 
-        // If not found in GET/POST, try to get from JSON body
+        // If not found in GET or POST, look for it in JSON
         if (!$userId) {
             $jsonData = json_decode(file_get_contents('php://input'), true);
             $userId = $jsonData['user_id'] ?? null;
