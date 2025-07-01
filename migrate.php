@@ -1,45 +1,88 @@
 <?php
 
-//start migration
+// Set up cinema booking database
+
+
 require_once __DIR__ . '/connection/db_connection.php';
 require_once __DIR__ . '/migrations/000_create_cinema_booking_db.php';
 
-// Create a temporary connection to create the database if it doesn't exist
-$temp_mysqli = new mysqli('localhost', 'root', 'root');
-if ($temp_mysqli->connect_error) {
-    die("Connection failed: " . $temp_mysqli->connect_error);
+echo "Starting migration...\n";
+
+// Create the database if it doesn't exist
+echo "Creating database...\n";
+
+// Create a temporary connection to create the database
+$temp_conn = new mysqli('localhost', 'root', 'root');
+
+// Check if connection worked
+if ($temp_conn->connect_error) {
+    echo "Error: Could not connect to MySQL\n";
+    echo "Error message: " . $temp_conn->connect_error . "\n";
+    exit(1);
 }
-createDB($temp_mysqli);
-$temp_mysqli->close();
 
-$mysqli = DBConnection::getInstance();
+// Create the database
+createDB($temp_conn);
+$temp_conn->close();
 
-$migrationsPath = __DIR__ . '/migrations/';
-$migrationFiles = glob($migrationsPath . '*.php');
+echo "Database created successfully!\n";
 
-sort($migrationFiles);
+// Get our main db connection
+echo "Connecting to database...\n";
+$db = DBConnection::getInstance();
+echo "Connected!\n";
 
-if (empty($migrationFiles)) {
-    echo "No migration files found.\n";
+// Run all the migration files
+echo "Running migrations...\n";
+
+// Get all migration files from the migrations folder
+$migrations_folder = __DIR__ . '/migrations/';
+$migration_files = glob($migrations_folder . '*.php');
+
+// Sort them so they run in the right order
+sort($migration_files);
+
+// Check if migration files are missing
+if (empty($migration_files)) {
+    echo "No migration files found!\n";
     exit(0);
 }
 
-foreach ($migrationFiles as $file) {
-    echo "  - Running " . basename($file) . "... ";
-    require_once $file;
-    if (basename($file) === '000_create_cinema_booking_db.php') {
-        continue; // Skip the database creation file as it's handled separately
+// Run each migration file
+foreach ($migration_files as $file) {
+    $filename = basename($file);
+
+    // Database created, skip the file
+    if ($filename === '000_create_cinema_booking_db.php') {
+        echo "Skipping database creation file...\n";
+        continue;
     }
 
-    $baseName = basename($file, '.php');
-    $parts = explode('_', $baseName);
-    array_shift($parts); // Remove the numeric prefix (e.g., '000')
-    $functionName = 'create' . implode('', array_map('ucfirst', array_slice($parts, 1)));
-    if (function_exists($functionName)) {
-        $functionName($mysqli->getConnection());
+    echo "Running migration: " . $filename . "... ";
+
+    // Include the migration file
+    require_once $file;
+
+    // Figure out what function to call based on the filename
+    // 001_create_users_table.php -> createUsersTable
+    $base_name = basename($file, '.php');  // Remove .php extension
+    $parts = explode('_', $base_name);     // Split by underscore
+    array_shift($parts);                   // Remove the number (001, 002, etc.)
+
+    // Build the function name
+    $function_name = 'create';
+    for ($i = 1; $i < count($parts); $i++) {
+        $function_name .= ucfirst($parts[$i]);
+    }
+
+    // Check if the function exists and run it
+    if (function_exists($function_name)) {
+        $function_name($db->getConnection());
+        echo "Done!\n";
     } else {
-        echo "Error: Migration function $functionName not found in " . basename($file) . "\n";
+        echo "Error: Could not find function " . $function_name . " in " . $filename . "\n";
         exit(1);
     }
-    echo "Done.\n";
 }
+
+echo "All migrations completed!\n";
