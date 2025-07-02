@@ -56,38 +56,51 @@ abstract class Model
 
     public function update(int $id, array $data)
     {
-        //Only allow fillable columns
-        $filteredData = array_filter(
-            $data,
-            fn($key) => in_array($key, $this->fillable),
-            ARRAY_FILTER_USE_KEY
-        );
-        //Prepare the arrays for updating the data
-        $setClauses = [];
+        // Only update columns that are allowed to be updated
+        $allowed_data = [];
+        foreach ($data as $column => $value) {
+            if (in_array($column, $this->fillable)) {
+                $allowed_data[$column] = $value;
+            }
+        }
+
+        // Check if we have any data to update
+        if (empty($allowed_data)) {
+            return false; // Nothing to update
+        }
+
+        // Build the SQL query parts
+        $set_parts = [];
         $values = [];
-        foreach ($filteredData as $column => $value) {
-            $setClauses[] = "{$column} = ?";
+
+        foreach ($allowed_data as $column => $value) {
+            $set_parts[] = "{$column} = ?";
             $values[] = $value;
         }
-        //Check if there is data to update
-        if (empty($setClauses)) {
-            return false; // No data to update
-        }
-        //Prepare the statement,SET column $setClause and update the values
-        $setClause = implode(", ", $setClauses);
-        $sql = "UPDATE {$this->table} SET {$setClause} WHERE id = ?";
+
+        // Create the full SQL query
+        $set_clause = implode(", ", $set_parts);
+        $sql = "UPDATE {$this->table} SET {$set_clause} WHERE id = ?";
+
+        // Prepare the statement
         $stmt = $this->mysqli->prepare($sql);
-        //Add the id to the end for binding
+
+        // Add the ID to the values array for the WHERE clause
         $values[] = $id;
-        //Get the types of the values
+
+        // Figure out what types our values are (string, int, etc.)
         $types = $this->get_param_types($values);
-        //Bind the values to the statement
+
+        // Bind all the values to the statement
         $stmt->bind_param($types, ...$values);
 
+        // Try to execute the update
         if ($stmt->execute()) {
+            // Check if any rows were actually updated
             return $stmt->affected_rows > 0;
         } else {
-            throw new Exception("Error updating record: " . $stmt->error);
+            // Something went wrong
+            throw new Exception("Failed to update record: " . $stmt->error);
         }
     }
 
@@ -116,14 +129,21 @@ abstract class Model
         //Get the types of the values for dynamic binding
         $types = '';
         foreach ($values as $value) {
-            if (is_int($value)) {
-                $types .= 'i';
-            } elseif (is_float($value)) {
-                $types .= 'd';
-            } elseif (is_string($value)) {
-                $types .= 's';
-            } else {
-                $types .= 'b'; // Blob for other types
+            switch (true) {
+                case is_int($value):
+                    $types .= 'i'; // Integer
+                    break;
+                case is_float($value):
+                    $types .= 'd'; // Float
+                    break;
+                case is_string($value):
+                    $types .= 's'; // String
+                    break;
+                case is_bool($value):
+                    $types .= 'b'; // Boolean
+                    break;
+                default:
+                    $types .= 's'; // Default to string for any other type
             }
         }
         return $types;

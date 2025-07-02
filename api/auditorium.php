@@ -1,7 +1,5 @@
 <?php
 
-require_once __DIR__ . '/../controllers/UsersController.php';
-
 // Add CORS headers to allow cross-origin requests, allow  separate frontend and backend to connect
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -14,16 +12,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-$controller = new UsersController();
+require_once __DIR__ . '/../controllers/AuditoriumsController.php';
+
+$controller = new AuditoriumsController();
 $action = $_GET['action'] ?? null; //Get the action from the request
 
 // Sort of a mini router, based on the action, call the corresponding method
 switch ($action) {
-    case 'register':
-        $controller->register();
+    case 'list':
+        $controller->list();
         break;
-    case 'login':
-        $controller->login();
+    case 'create':
+        $controller->create();
         break;
     default:
         http_response_code(404);

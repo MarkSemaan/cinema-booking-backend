@@ -27,7 +27,10 @@ class UsersController
         ])) {
             //If the user is created successfully, return a success message
             http_response_code(201);
-            echo json_encode(['message' => 'User registered successfully']);
+            echo json_encode([
+                'success' => true,
+                'message' => 'User registered successfully'
+            ]);
         } else {
             //If the user is not created successfully, return an error message
             http_response_code(500);
@@ -52,12 +55,14 @@ class UsersController
         //Check if the user exists and the password is correct
         if ($user && password_verify($data['password'], $user['password'])) {
             //If the user exists and the password is correct, return a success message
+            http_response_code(200);
             echo json_encode([
                 'message' => 'Login successful',
                 'user_id' => $user['id'],
                 'username' => $user['username'],
                 'is_admin' => (bool)$user['is_admin']
             ]);
+            return;
         } else {
             //If the user does not exist or the password is incorrect, return an error message
             http_response_code(401);

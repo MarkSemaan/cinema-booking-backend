@@ -23,7 +23,15 @@ class ShowtimesController
     //Method to prevent access to the API for non-admin users
     private function requireAdmin()
     {
+        // Check for user_id in multiple sources
         $userId = $_GET['user_id'] ?? $_POST['user_id'] ?? null;
+
+        // If not found in GET/POST,look for it in JSON
+        if (!$userId) {
+            $jsonData = json_decode(file_get_contents('php://input'), true);
+            $userId = $jsonData['user_id'] ?? null;
+        }
+
         if (!$this->isAdmin($userId)) {
             http_response_code(403);
             echo json_encode(['error' => 'Admin access required']);
