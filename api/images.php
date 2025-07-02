@@ -1,18 +1,18 @@
 <?php
 
-// Add CORS headers to allow cross-origin requests
+// Add CORS headers to allow cross-origin requests, allow  separate frontend and backend to connect
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 header('Content-Type: image/jpeg'); // Default content type
 
-// Handle preflight OPTIONS request
+// Respond to the browser's safety check before the actual request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
 
-// Only allow GET requests
+// Only allow GET requests, the uploading is handled in the controller
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     http_response_code(405);
     echo json_encode(['error' => 'Method not allowed']);
@@ -28,7 +28,7 @@ if (empty($imagePath)) {
     exit();
 }
 
-// Security: Prevent directory traversal attacks
+// Security: Prevent directory traversal attacks, can't let anyone access other files
 if (strpos($imagePath, '..') !== false || strpos($imagePath, '/') === 0) {
     http_response_code(403);
     echo json_encode(['error' => 'Invalid image path']);
