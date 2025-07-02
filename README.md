@@ -70,4 +70,4 @@ Movie posters can be uploaded when creating movies:
 
 You can test the API with tools like Postman
 
-**Note**: This is just the backend API. You'll need a frontend to interact with it.
+**Note**: This is just the backend API. You'll need a [frontend](https://github.com/MarkSemaan/cinema-booking-frontend/) to interact with it.
