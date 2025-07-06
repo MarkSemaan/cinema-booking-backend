@@ -1,29 +1,28 @@
 <?php
-
-// Include routes configuration
 require_once __DIR__ . '/core/routes.php';
 
-// Add CORS headers
+// Add CORS headers to allow cross-origin requests, allow  separate frontend and backend to connect// Add CORS headers
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 header('Content-Type: application/json');
 
-// Handle preflight requests
+// Respond to the browser's safety check before the actual request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
 
+// Define your base directory 
 $base_dir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
 $request = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-// Remove base directory from request path
+// Remove the base directory from the request if present
 if (strpos($request, $base_dir) === 0) {
     $request = substr($request, strlen($base_dir));
 }
 
-// Handle root request
+// Ensure the request is at least '/'
 if ($request == '') {
     $request = '/';
 }
