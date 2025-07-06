@@ -52,6 +52,32 @@ class AuditoriumsController
             echo json_encode(['error' => 'Failed to retrieve auditoriums']);
         }
     }
+    public function get()
+    {
+        $id = $_GET['id'] ?? null;
+
+        if (!$id || !is_numeric($id)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Valid auditorium ID is required']);
+            return;
+        }
+
+        try {
+            $auditorium = new Auditorium();
+            $auditoriumData = $auditorium->find((int)$id);
+
+            if ($auditoriumData) {
+                http_response_code(200);
+                echo json_encode(['auditorium' => $auditoriumData]);
+            } else {
+                http_response_code(404);
+                echo json_encode(['error' => 'Auditorium not found']);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to retrieve auditorium']);
+        }
+    }
     public function create()
     {
         if (!$this->requireAdmin()) return;
